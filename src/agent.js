@@ -30,7 +30,7 @@ function extractText(response) {
         }
     }
     const str = response?.toString?.();
-    if (str && str !== '[object Object]' && !str.startsWith('undefined')) return str;
+    if (typeof str === 'string' && str !== '[object Object]' && !str.startsWith('undefined')) return str;
     return '';
 }
 
@@ -248,7 +248,7 @@ async function handleToolCall(toolCall, projectDir, autoApprove) {
             if (rl.length > 20) console.log(chalk.dim(`    ... (+${rl.length - 20} more lines)`));
         }
 
-        if ((name === 'write_file' || name === 'edit_file') && !result.startsWith('Error')) {
+        if ((name === 'write_file' || name === 'edit_file') && typeof result === 'string' && !result.startsWith('Error')) {
             console.log(chalk.green(`    done`));
         }
 
@@ -339,7 +339,7 @@ async function runAgentLoop(puter, messages, modelName, projectDir, autoApprove,
 
         } catch (err) {
             spinner.stop();
-            const errMsg = err?.error?.message || err?.message || err?.toString?.() || JSON.stringify(err);
+            const errMsg = err?.error?.message || err?.message || (err?.toString?.() !== '[object Object]' ? err?.toString?.() : JSON.stringify(err));
             // If tools already ran and this is a continuation error, show gracefully
             console.error(chalk.red(`  Error: ${errMsg}`));
             if (errMsg && (errMsg.includes('rate limit') || errMsg.includes('429'))) {
