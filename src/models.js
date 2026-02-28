@@ -46,6 +46,10 @@ export const POPULAR_MODELS = [
     // Qwen
     { id: 'qwen-max', vendor: 'Alibaba', description: 'Qwen Max — most capable' },
     { id: 'qwen-plus', vendor: 'Alibaba', description: 'Qwen Plus — balanced' },
+
+    // Perplexity (Built-in Web Search)
+    { id: 'llama-3.1-sonar-large-128k-online', vendor: 'Perplexity', description: 'Sonar Large — with built-in web search' },
+    { id: 'llama-3.1-sonar-small-128k-online', vendor: 'Perplexity', description: 'Sonar Small — faster web search' },
 ];
 
 // Recommended models for agentic coding (good at tool use)
@@ -59,6 +63,7 @@ export const RECOMMENDED_AGENT_MODELS = [
     { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', desc: 'Google advanced' },
     { id: 'grok-4', label: 'Grok 4', desc: 'xAI flagship' },
     { id: 'deepseek-r1', label: 'DeepSeek R1', desc: 'Reasoning model' },
+    { id: 'llama-3.1-sonar-large-128k-online', label: 'Perplexity Sonar (Online)', desc: 'Real-time web search capabilities' },
 ];
 
 export function formatModelsTable() {

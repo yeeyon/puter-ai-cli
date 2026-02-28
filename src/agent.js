@@ -262,7 +262,7 @@ async function handleToolCall(toolCall, projectDir, autoApprove) {
 // ─── System prompt ───
 
 function buildSystemPrompt(projectDir) {
-    return `You are an expert AI coding assistant operating in an agentic mode. You have tools to read files, write files, edit files, list directories, search code, and run shell commands.
+    return `You are an expert AI coding assistant operating in an agentic mode. You have tools to read files, write files, edit files, list directories, search code, run shell commands, and search the web (web_search).
 
 Your working directory is: ${projectDir}
 

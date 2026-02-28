@@ -144,6 +144,23 @@ export const TOOL_DEFINITIONS = [
                 required: []
             }
         }
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'web_search',
+            description: 'Search the web for up-to-date information. Use this when you need facts, news, or knowledge beyond your training data.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    query: {
+                        type: 'string',
+                        description: 'The search query to look up securely'
+                    }
+                },
+                required: ['query']
+            }
+        }
     }
 ];
 
@@ -153,6 +170,7 @@ export const TOOL_RISK = {
     list_directory: 'safe',
     search_files: 'safe',
     get_project_info: 'safe',
+    web_search: 'safe',
     write_file: 'ask',
     edit_file: 'ask',
     run_command: 'danger',
@@ -384,6 +402,67 @@ async function getProjectInfoImpl(args, projectDir) {
     return info.join('\n');
 }
 
+async function webSearchImpl(args) {
+    try {
+        const query = args.query;
+        if (!query) return 'Error: query is required';
+
+        const response = await fetch('https://lite.duckduckgo.com/lite/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            body: `q=${encodeURIComponent(query)}`
+        });
+
+        if (!response.ok) {
+            return `Error: Search unavailable (status ${response.status})`;
+        }
+
+        const html = await response.text();
+
+        // Very basic parsing: look for result-snippet and result-link
+        const results = [];
+        const resultRows = html.split('<tr');
+
+        let currentTitle = '';
+        let currentUrl = '';
+
+        for (const row of resultRows) {
+            if (row.includes('result-link')) {
+                // Extract URL
+                const urlMatch = row.match(/href="([^"]+)"/i);
+                if (urlMatch) currentUrl = urlMatch[1];
+
+                // Extract Title
+                const titleMatch = row.match(/class=['"]result-link['"][^>]*>(.*?)<\/a>/si);
+                if (titleMatch) {
+                    // strip html tags
+                    currentTitle = titleMatch[1].replace(/<[^>]+>/g, '').trim();
+                }
+            } else if (row.includes('result-snippet') && currentTitle) {
+                const snippetMatch = row.match(/class=['"]result-snippet['"][^>]*>(.*?)<\/td>/si);
+                if (snippetMatch) {
+                    const snippet = snippetMatch[1].replace(/<[^>]+>/g, '').trim().replace(/\s+/g, ' ');
+                    results.push(`## ${currentTitle}\nURL: ${currentUrl}\nSummary: ${snippet}\n`);
+                }
+                currentTitle = '';
+                currentUrl = '';
+            }
+            if (results.length >= 5) break;
+        }
+
+        if (results.length === 0) {
+            return 'No reliable search results found. They might be blocking automated requests or parsing failed.';
+        }
+
+        return results.join('\n');
+    } catch (err) {
+        return `Error performing web search: ${err.message}`;
+    }
+}
+
 // ─── Tool executor ───
 
 export async function executeTool(name, args, projectDir) {
@@ -395,6 +474,7 @@ export async function executeTool(name, args, projectDir) {
         case 'search_files': return searchFilesImpl(args, projectDir);
         case 'run_command': return runCommandImpl(args, projectDir);
         case 'get_project_info': return getProjectInfoImpl(args, projectDir);
+        case 'web_search': return webSearchImpl(args);
         default: return `Unknown tool: ${name}`;
     }
 }
